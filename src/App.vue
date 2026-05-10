@@ -5,20 +5,98 @@
       @toggle="sidebarCollapsed = !sidebarCollapsed"
     />
 
-    <div class="app-main" :class="{ 'app-main--expanded': sidebarCollapsed }">
+    <div class="app-main">
       <KTopbar @toggle-stream="streamWorker.toggle()" />
 
-      <main class="app-content" ref="contentRef">
-        <!-- Cards animate in on mount via GSAP stagger -->
-        <div class="placeholder-grid">
-          <div
-            v-for="n in 6"
-            :key="n"
-            class="placeholder-card"
-            ref="cardRefs"
-          >
-            <span style="color:#6b7280;font-size:13px;">Chart {{ n }} coming in Step 4</span>
-          </div>
+      <main class="app-content">
+
+        <!-- ── metric card row ── -->
+        <div class="metrics-grid" ref="cardsRef">
+          <MetricCard
+            v-for="card in metricCards"
+            :key="card.metric"
+            v-bind="card"
+            :value="latest?.[card.metric] ?? 0"
+            :previous="previous?.[card.metric] ?? 0"
+            :history="history(card.metric)"
+          />
+        </div>
+
+      
+        <div class="charts-row" ref="chartsRef">
+          <LineChart
+            title="System Performance"
+            subtitle="CPU & Memory over time"
+            :data="visiblePoints"
+            :series="[
+              {
+                key: 'cpu',
+                label: 'CPU',
+                color: '#e8f542',
+                unit: '%',
+                max: 100,
+              },
+              {
+                key: 'memory',
+                label: 'Memory',
+                color: '#4fffb0',
+                unit: '%',
+                max: 100,
+              },
+            ]"
+            class="chart-wide"
+          />
+
+          <AreaChart
+            title="Network Throughput"
+            subtitle="MB/s live"
+            :data="visiblePoints"
+            :series="[
+              {
+                key: 'network',
+                label: 'Network',
+                color: '#4fffb0',
+                unit: 'MB/s',
+                max: 1000,
+              },
+            ]"
+            class="chart-narrow"
+          />
+        </div>
+
+      
+        <div class="charts-row">
+          <AreaChart
+            title="Request Rate"
+            subtitle="Requests per second"
+            :data="visiblePoints"
+            :series="[
+              {
+                key: 'requests',
+                label: 'Req/s',
+                color: '#e8f542',
+                unit: 'req/s',
+                max: 2000,
+              },
+            ]"
+            class="chart-narrow"
+          />
+
+          <BarChart
+            title="Latency Distribution"
+            subtitle="Response time ms"
+            :data="visiblePoints"
+            :series="[
+              {
+                key: 'latency',
+                label: 'Latency',
+                color: '#f5a623',
+                unit: 'ms',
+                max: 500,
+              },
+            ]"
+            class="chart-wide"
+          />
         </div>
       </main>
     </div>
@@ -26,32 +104,116 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { gsap } from 'gsap'
-import KSidebar from './layouts/sidebar.vue'
-import KTopbar from './layouts/topbar.vue'
-import { useStreamWorker } from  "../src/workers/useStreamWorkers"
+import { ref, computed, onMounted } from "vue";
+import { gsap } from "gsap";
+import {
+  Cpu,
+  MemoryStick,
+  Wifi,
+  Zap,
+  AlertTriangle,
+  Timer,
+} from "lucide-vue-next";
+import KSidebar from "../src/layouts/sidebar.vue";
+import KTopbar from "../src/layouts/topbar.vue";
+import MetricCard from "./components/charts/MetricCard.vue";
+import LineChart from "./components/charts/LineChart.vue";
+import AreaChart from "./components/charts/AreaChart.vue";
+import BarChart from "./components/charts/BarChart.vue";
+import { useStreamWorker } from "../src/workers/useStreamWorkers";
+import { useMetricsStore } from "../src/stores/metricStore";
 
-const sidebarCollapsed = ref(false)
-const cardRefs = ref<HTMLElement[]>([])
-const streamWorker = useStreamWorker()
+const streamWorker = useStreamWorker();
+const metricsStore = useMetricsStore();
+
+const sidebarCollapsed = ref(false);
+
+
+
+const visiblePoints = computed(() => metricsStore.visiblePoints);
+const latest = computed(() => metricsStore.latest);
+const previous = computed(() => metricsStore.previous);
+
+// last 20 values for sparklines
+const history = (metric: string) =>
+  metricsStore.buffer.slice(-20).map(p => p[metric as keyof typeof p] as number)
+
+// metric card definitions
+const metricCards = [
+  {
+    metric: "cpu" as const,
+    label: "CPU Usage",
+    unit: "%",
+    color: "#e8f542",
+    icon: Cpu,
+    decimals: 1,
+  },
+  {
+    metric: "memory" as const,
+    label: "Memory",
+    unit: "%",
+    color: "#4fffb0",
+    icon: MemoryStick,
+    decimals: 1,
+  },
+  {
+    metric: "network" as const,
+    label: "Network",
+    unit: "MB/s",
+    color: "#4fffb0",
+    icon: Wifi,
+    decimals: 0,
+  },
+  {
+    metric: "requests" as const,
+    label: "Requests/s",
+    unit: "req/s",
+    color: "#e8f542",
+    icon: Zap,
+    decimals: 0,
+  },
+  {
+    metric: "errorRate" as const,
+    label: "Error Rate",
+    unit: "%",
+    color: "#ff4d6d",
+    icon: AlertTriangle,
+    decimals: 2,
+  },
+  {
+    metric: "latency" as const,
+    label: "Latency",
+    unit: "ms",
+    color: "#f5a623",
+    icon: Timer,
+    decimals: 0,
+  },
+];
 
 onMounted(() => {
-  // Start the data stream immediately
-  streamWorker.start()
+  streamWorker.start();
 
-  // GSAP staggered card entrance — the Finomic effect
-  // Each card scales up from 0.92 and fades in, 80ms apart
-  gsap.from(cardRefs.value, {
+
+  gsap.from(".metrics-grid > *", {
     opacity: 0,
     scale: 0.92,
-    y: 20,
+    y: 16,
     duration: 0.6,
-    ease: 'power3.out',
-    stagger: 0.08,   // 80ms between each card
-    delay: 0.4,      // wait for sidebar + topbar to animate first
-  })
-})
+    ease: "power3.out",
+    stagger: 0.07,
+    delay: 0.3,
+  });
+
+ 
+  gsap.from(".charts-row", {
+    opacity: 0,
+    y: 24,
+    duration: 0.7,
+    ease: "power3.out",
+    stagger: 0.12,
+    delay: 0.6,
+  });
+});
 </script>
 
 <style scoped>
@@ -65,30 +227,57 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 0;   /* prevents flex overflow */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
 }
 
 .app-content {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
-}
-
-/* Placeholder grid — replaced with real charts in Step 4 */
-.placeholder-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.placeholder-card {
-  background: #141418;
-  border: 1px solid #1e1e26;
-  border-radius: 16px;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+
+.charts-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+
+@media (min-width: 1024px) {
+  .charts-row {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+
+.charts-row:nth-child(3) {
+  grid-template-columns: 1fr 2fr;
+}
+
+
+@media (max-width: 1280px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .charts-row {
+    grid-template-columns: 1fr !important;
+  }
 }
 </style>
