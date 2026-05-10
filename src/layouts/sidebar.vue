@@ -1,5 +1,9 @@
 <template>
-  <aside class="sidebar" ref="sidebarRef">
+ <aside 
+  class="sidebar" 
+  ref="sidebarRef"
+  :style="{ width: collapsed ? '64px' : '240px' }"
+>
     <!-- logo -->
     <div class="sidebar__logo">
       <img
