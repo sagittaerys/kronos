@@ -11,5 +11,5 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const setErrorMessage = (m: string | null)    => { errorMessage.value = m }
   const toggleSidebar   = ()                    => { sidebarOpen.value = !sidebarOpen.value }
 
-  return { status, sidebarOpen, errorMessage, setStatus, setErrorMessage, toggleSidebar }
+return { status, sidebarOpen, errorMessage, setStatus, setErrorMessage, toggleSidebar }
 })

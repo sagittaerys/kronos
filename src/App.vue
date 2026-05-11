@@ -70,8 +70,6 @@
             />
           </div>
 
-          <!-- activity feed -->
-          <ActivityFeed />
 
         </template>
       </main>
@@ -80,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { gsap } from 'gsap'
 import { Cpu, MemoryStick, Wifi, Zap, AlertTriangle, Timer } from 'lucide-vue-next'
 
@@ -90,7 +88,7 @@ import MetricCard          from './components/charts/MetricCard.vue'
 import LineChart           from './components/charts/LineChart.vue'
 import AreaChart           from './components/charts/AreaChart.vue'
 import BarChart            from './components/charts/BarChart.vue'
-// import ActivityFeed        from './components/feed/ActivityFeed.vue'
+
 import StreamStatusBanner  from './components/ui/stream-banner.vue'
 import KLoadingPulse       from './components/ui/loading-pulse.vue'
 
@@ -126,9 +124,7 @@ const metricCards = [
 onMounted(() => {
   streamWorker.start()
 
-  // wait for v-else to mount before animating
-  // nextTick isn't needed here — GSAP targets by class so
-  // it will pick them up whenever they appear in the DOM
+  
   gsap.from('.metrics-grid > *', {
     opacity: 0, scale: 0.92, y: 16,
     duration: 0.6, ease: 'power3.out',

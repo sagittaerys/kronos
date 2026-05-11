@@ -44,13 +44,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { gsap } from 'gsap'
-import { Bell, Pause, Play, Menu } from 'lucide-vue-next'
+import { Bell, Pause, Play } from 'lucide-vue-next'
 import { useMetricsStore } from "../stores/metricStore"
 import { useActivityStore } from '../stores/activityStore'
 import { useDashboardStore } from '../stores/dashboardStore'
 import type { TimeRange } from '../types'
 
-const emit = defineEmits<{ toggleStream: [], openSidebar: [] }>()
+const emit = defineEmits<{ toggleStream: [] }>()
 
 const metricsStore   = useMetricsStore()
 const activityStore  = useActivityStore()
