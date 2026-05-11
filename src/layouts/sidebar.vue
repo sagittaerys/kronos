@@ -1,9 +1,9 @@
 <template>
- <aside 
-  class="sidebar" 
-  ref="sidebarRef"
-  :style="{ width: collapsed ? '64px' : '240px' }"
->
+  <aside
+    class="sidebar"
+    ref="sidebarRef"
+    :style="{ width: collapsed ? '64px' : '240px' }"
+  >
     <!-- logo -->
     <div class="sidebar__logo">
       <img
@@ -24,26 +24,21 @@
         :class="{ 'nav-item--active': activeNav === item.id }"
         @click="activeNav = item.id"
       >
-        <!-- dynamic icon -->
         <component :is="item.icon" :size="18" />
         <span v-if="!collapsed" class="nav-item__label">{{ item.label }}</span>
-        <!-- notif badge -->
         <span v-if="item.badge && !collapsed" class="nav-badge">
           {{ item.badge }}
         </span>
       </button>
     </nav>
 
-    <!-- bottom section -->
+    <!-- bottom -->
     <div class="sidebar__bottom">
       <div class="stream-status" v-if="!collapsed">
         <KStatusDot :status="dashboardStore.status" />
-        <span class="status-label">
-          {{ statusLabel }}
-        </span>
+        <span class="status-label">{{ statusLabel }}</span>
       </div>
 
-      <!-- collapse toggle -->
       <button class="collapse-btn" @click="emit('toggle')">
         <PanelLeftClose v-if="!collapsed" :size="16" />
         <PanelLeftOpen v-else :size="16" />
@@ -53,63 +48,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { gsap } from "gsap";
+import { ref, computed, onMounted } from 'vue'
+import { gsap } from 'gsap'
 import {
-  LayoutDashboard,
-  Activity,
-  Wifi,
-  Shield,
-  Cpu,
-  BarChart3,
-  Settings,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-vue-next";
-import KStatusDot from "../components/ui/status-dot.vue";
-import { useDashboardStore } from "../stores/dashboardStore";
+  LayoutDashboard, Activity, Wifi, Shield,
+  Cpu, BarChart3, Settings,
+  PanelLeftClose, PanelLeftOpen,
+} from 'lucide-vue-next'
+import KStatusDot from '../components/ui/status-dot.vue'
+import { useDashboardStore } from '../stores/dashboardStore'
 
-defineProps<{ collapsed: boolean }>();
-const emit = defineEmits<{ toggle: [] }>();
+defineProps<{ collapsed: boolean }>()
+const emit = defineEmits<{ toggle: [] }>()
 
-const dashboardStore = useDashboardStore();
-const sidebarRef = ref<HTMLElement | null>(null);
-const activeNav = ref("dashboard");
+const dashboardStore = useDashboardStore()
+const sidebarRef = ref<HTMLElement | null>(null)
+const activeNav = ref('dashboard')
 
 const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, badge: null },
-  { id: "activity", label: "Activity", icon: Activity, badge: null },
-  { id: "network", label: "Network", icon: Wifi, badge: null },
-  { id: "security", label: "Security", icon: Shield, badge: 3 },
-  { id: "compute", label: "Compute", icon: Cpu, badge: null },
-  { id: "analytics", label: "Analytics", icon: BarChart3, badge: null },
-  { id: "settings", label: "Settings", icon: Settings, badge: null },
-];
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, badge: null },
+  { id: 'activity',  label: 'Activity',  icon: Activity,        badge: null },
+  { id: 'network',   label: 'Network',   icon: Wifi,            badge: null },
+  { id: 'security',  label: 'Security',  icon: Shield,          badge: 3    },
+  { id: 'compute',   label: 'Compute',   icon: Cpu,             badge: null },
+  { id: 'analytics', label: 'Analytics', icon: BarChart3,       badge: null },
+  { id: 'settings',  label: 'Settings',  icon: Settings,        badge: null },
+]
 
-const statusLabel = computed(
-  () =>
-    ({
-      live: "Streaming live",
-      paused: "Stream paused",
-      reconnecting: "Reconnecting...",
-      error: "Stream error",
-    })[dashboardStore.status],
-);
+const statusLabel = computed(() => ({
+  live:         'Streaming live',
+  paused:       'Stream paused',
+  reconnecting: 'Reconnecting...',
+  error:        'Stream error',
+})[dashboardStore.status])
 
-// gsap
 onMounted(() => {
   gsap.from(sidebarRef.value, {
     x: -80,
     opacity: 0,
     duration: 0.7,
-    ease: "power3.out",
-  });
-});
+    ease: 'power3.out',
+  })
+})
 </script>
 
 <style scoped>
 .sidebar {
-  width: 240px;
   min-height: 100vh;
   background: #0f0f13;
   border-right: 1px solid #1e1e26;
@@ -119,35 +103,33 @@ onMounted(() => {
   gap: 8px;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
-}
-
-.logo-img {
-  height: 55px;
-  width: 100%;
-  /* border: 1px solid red; */
-  object-fit: contain;
-  transition: all 0.3s ease;
-}
-
-.logo-img--collapsed {
-  height: 32px;
-  width: 32px;
-  /* border: 1px solid red; */
-  object-fit: cover;
-  object-position: left center;
+  overflow: hidden;
 }
 
 /* Logo */
 .sidebar__logo {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
   padding: 0 8px 24px;
   border-bottom: 1px solid #1e1e26;
   margin-bottom: 16px;
 }
 
-/* Nav */
+.logo-img {
+  height: 44px;
+  width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  transition: all 0.3s ease;
+}
+
+.logo-img--collapsed {
+  object-position: center center;
+  height: 32px;
+}
+
+/* nav */
 .sidebar__nav {
   display: flex;
   flex-direction: column;
@@ -162,6 +144,7 @@ onMounted(() => {
   color: #6b7280;
   padding: 0 12px;
   margin-bottom: 4px;
+  white-space: nowrap;
 }
 
 .nav-item {
@@ -180,6 +163,7 @@ onMounted(() => {
   font-size: 13px;
   font-weight: 500;
   position: relative;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
@@ -193,7 +177,7 @@ onMounted(() => {
 }
 
 .nav-item--active::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   top: 20%;
@@ -227,11 +211,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow: hidden;
 }
 
 .status-label {
   font-size: 12px;
   color: #6b7280;
+  white-space: nowrap;
 }
 
 .collapse-btn {
@@ -242,11 +228,52 @@ onMounted(() => {
   padding: 6px;
   cursor: pointer;
   display: flex;
+  flex-shrink: 0;
   transition: all 0.2s;
 }
 
 .collapse-btn:hover {
   color: #f0f0f0;
   background: #22222e;
+}
+
+/* ── Mobile: always collapsed to icon strip ── */
+@media (max-width: 767px) {
+  .sidebar {
+    width: 64px !important;
+    padding: 16px 8px;
+  }
+
+  .nav-item__label,
+  .nav-section-label,
+  .nav-badge,
+  .stream-status {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+    padding: 10px 0;
+  }
+
+  .sidebar__logo {
+    justify-content: center;
+    padding: 0 0 20px;
+  }
+
+  .logo-img {
+    height: 28px;
+    width: 28px;
+    object-position: center center;
+  }
+
+  .sidebar__bottom {
+    justify-content: center;
+    padding-left: 0;
+  }
+
+  .collapse-btn {
+    display: none;
+  }
 }
 </style>

@@ -44,13 +44,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { gsap } from 'gsap'
-import { Bell, Pause, Play } from 'lucide-vue-next'
+import { Bell, Pause, Play, Menu } from 'lucide-vue-next'
 import { useMetricsStore } from "../stores/metricStore"
 import { useActivityStore } from '../stores/activityStore'
 import { useDashboardStore } from '../stores/dashboardStore'
 import type { TimeRange } from '../types'
 
-const emit = defineEmits<{ toggleStream: [] }>()
+const emit = defineEmits<{ toggleStream: [], openSidebar: [] }>()
 
 const metricsStore   = useMetricsStore()
 const activityStore  = useActivityStore()
@@ -208,5 +208,41 @@ onUnmounted(() => clearInterval(clockInterval))
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .topbar {
+    padding: 0 12px;
+    height: auto;
+    min-height: 56px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .topbar__title {
+    font-size: 14px;
+  }
+
+  .topbar__sub {
+    font-size: 10px;
+  }
+
+  .time-range {
+    display: none;
+  }
+
+  .control-btn span {
+    display: none; 
+  }
+
+  .control-btn {
+    padding: 7px;
+  }
+
+  .topbar__right {
+    gap: 6px;
+  }
 }
 </style>

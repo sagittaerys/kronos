@@ -1,16 +1,28 @@
 <template>
   <div class="app-shell">
+    <!-- Mobile backdrop overlay -->
+    <Transition name="overlay">
+      <div
+        v-if="mobileMenuOpen"
+        class="mobile-overlay"
+        @click="mobileMenuOpen = false"
+      />
+    </Transition>
+
     <KSidebar
       :collapsed="sidebarCollapsed"
+      :mobile-open="mobileMenuOpen"
       @toggle="sidebarCollapsed = !sidebarCollapsed"
     />
 
     <div class="app-main">
-      <KTopbar @toggle-stream="streamWorker.toggle()" />
+      <KTopbar
+        @toggle-stream="streamWorker.toggle()"
+        @open-sidebar="mobileMenuOpen = true"
+      />
 
       <main class="app-content">
-
-        <!-- ── metric card row ── -->
+        <!-- metric cards -->
         <div class="metrics-grid" ref="cardsRef">
           <MetricCard
             v-for="card in metricCards"
@@ -22,7 +34,7 @@
           />
         </div>
 
-      
+        <!-- charts row 1 -->
         <div class="charts-row" ref="chartsRef">
           <LineChart
             title="System Performance"
@@ -46,7 +58,6 @@
             ]"
             class="chart-wide"
           />
-
           <AreaChart
             title="Network Throughput"
             subtitle="MB/s live"
@@ -64,8 +75,8 @@
           />
         </div>
 
-      
-        <div class="charts-row">
+        <!-- charts row 2 -->
+        <div class="charts-row charts-row--reverse">
           <AreaChart
             title="Request Rate"
             subtitle="Requests per second"
@@ -81,7 +92,6 @@
             ]"
             class="chart-narrow"
           />
-
           <BarChart
             title="Latency Distribution"
             subtitle="Response time ms"
@@ -98,6 +108,9 @@
             class="chart-wide"
           />
         </div>
+
+        <!-- activity feed -->
+        <ActivityFeed />
       </main>
     </div>
   </div>
@@ -114,12 +127,13 @@ import {
   AlertTriangle,
   Timer,
 } from "lucide-vue-next";
-import KSidebar from "../src/layouts/sidebar.vue";
-import KTopbar from "../src/layouts/topbar.vue";
+import KSidebar from "./layouts/sidebar.vue";
+import KTopbar from "./layouts/topbar.vue";
 import MetricCard from "./components/charts/MetricCard.vue";
 import LineChart from "./components/charts/LineChart.vue";
 import AreaChart from "./components/charts/AreaChart.vue";
 import BarChart from "./components/charts/BarChart.vue";
+// import ActivityFeed  from './components/feed/ActivityFeed.vue'
 import { useStreamWorker } from "../src/workers/useStreamWorkers";
 import { useMetricsStore } from "../src/stores/metricStore";
 
@@ -127,18 +141,19 @@ const streamWorker = useStreamWorker();
 const metricsStore = useMetricsStore();
 
 const sidebarCollapsed = ref(false);
-
-
+const mobileMenuOpen = ref(false); // ← this was missing entirely
+const cardsRef = ref<HTMLElement | null>(null);
+const chartsRef = ref<HTMLElement | null>(null);
 
 const visiblePoints = computed(() => metricsStore.visiblePoints);
 const latest = computed(() => metricsStore.latest);
 const previous = computed(() => metricsStore.previous);
 
-// last 20 values for sparklines
 const history = (metric: string) =>
-  metricsStore.buffer.slice(-20).map(p => p[metric as keyof typeof p] as number)
+  metricsStore.buffer
+    .slice(-20)
+    .map((p) => p[metric as keyof typeof p] as number);
 
-// metric card definitions
 const metricCards = [
   {
     metric: "cpu" as const,
@@ -193,7 +208,6 @@ const metricCards = [
 onMounted(() => {
   streamWorker.start();
 
-
   gsap.from(".metrics-grid > *", {
     opacity: 0,
     scale: 0.92,
@@ -204,7 +218,6 @@ onMounted(() => {
     delay: 0.3,
   });
 
- 
   gsap.from(".charts-row", {
     opacity: 0,
     y: 24,
@@ -212,6 +225,14 @@ onMounted(() => {
     ease: "power3.out",
     stagger: 0.12,
     delay: 0.6,
+  });
+
+  gsap.from(".feed-wrap", {
+    opacity: 0,
+    y: 24,
+    duration: 0.7,
+    ease: "power3.out",
+    delay: 0.9,
   });
 });
 </script>
@@ -232,7 +253,7 @@ onMounted(() => {
 
 .app-content {
   flex: 1;
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -242,42 +263,65 @@ onMounted(() => {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 }
 
+@media (max-width: 767px) {
+  .app-content {
+    padding: 12px 10px;
+    gap: 10px;
+  }
 
+  .metrics-grid {
+    gap: 8px;
+  }
+}
+
+/* Chart rows — stacked on mobile */
 .charts-row {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
 }
 
-
-@media (min-width: 1024px) {
-  .charts-row {
-    grid-template-columns: 2fr 1fr;
-  }
+/* Mobile overlay backdrop */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+  backdrop-filter: blur(2px);
 }
 
-
-.charts-row:nth-child(3) {
-  grid-template-columns: 1fr 2fr;
+.overlay-enter-active,
+.overlay-leave-active {
+  transition: opacity 0.25s ease;
+}
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
 }
 
-
-@media (max-width: 1280px) {
+/* Tablet */
+@media (min-width: 768px) {
   .metrics-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 768px) {
+/* Desktop */
+@media (min-width: 1024px) {
   .metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
+
   .charts-row {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 2fr 1fr;
+  }
+
+  .charts-row--reverse {
+    grid-template-columns: 1fr 2fr;
   }
 }
 </style>

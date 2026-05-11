@@ -234,4 +234,34 @@ onMounted(() => {
   width: 100%;
   height: 100%;
 }
+
+@media (max-width: 767px) {
+  .metric-card {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .metric-number {
+    font-size: 22px;
+  }
+
+  .metric-card__label {
+    font-size: 11px;
+  }
+
+  .metric-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .metric-delta {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  .metric-card__spark {
+    margin-top: 4px;
+    height: 32px;
+  }
+}
 </style>
